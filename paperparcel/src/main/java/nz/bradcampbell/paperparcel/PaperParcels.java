@@ -1,12 +1,10 @@
 package nz.bradcampbell.paperparcel;
 
-import android.os.Parcelable;
-
 import java.lang.reflect.Field;
 import java.util.Map;
 
 /**
- * Central mechanism for {@link #wrap(Object)}ing/{@link #unwrap(Parcelable)}ping arbitrary
+ * Central mechanism for {@link #wrap(Object)}ing/{@link #unwrap(TypedParcelable)}ping arbitrary
  * PaperParcel objects.
  */
 public final class PaperParcels {
@@ -28,26 +26,24 @@ public final class PaperParcels {
     }
   }
 
-  // TODO make the generated FooParcel classes implement an interface so we can be more typesafe?
-  public static <ORIG, PARCELABLE extends Parcelable> PARCELABLE wrap(ORIG originalObj) {
+  public static <T> TypedParcelable<T> wrap(T originalObj) {
     Class<?> type = originalObj.getClass();
     //noinspection unchecked
-    Delegator<ORIG, PARCELABLE> delegator = FROM_ORIGINAL.get(type);
+    Delegator<T, TypedParcelable<T>> delegator = FROM_ORIGINAL.get(type);
     return delegator.wrap(originalObj);
   }
 
-  // TODO make the generated FooParcel classes implement an interface so we can be more typesafe?
-  public static <ORIG, PARCELABLE extends Parcelable> ORIG unwrap(PARCELABLE parcelableObj) {
+  public static <T> T unwrap(TypedParcelable<T> parcelableObj) {
     Class<?> type = parcelableObj.getClass();
     //noinspection unchecked
-    Delegator<ORIG, PARCELABLE> delegator = FROM_PARCELABLE.get(type);
+    Delegator<T, TypedParcelable<T>> delegator = FROM_PARCELABLE.get(type);
     return delegator.unwrap(parcelableObj);
   }
 
-  interface Delegator<ORIG, PARCELABLE extends Parcelable> {
-    ORIG unwrap(PARCELABLE parcelableObj);
+  interface Delegator<ORIG, PARCEL extends TypedParcelable<ORIG>> {
+    ORIG unwrap(PARCEL parcelableObj);
 
-    PARCELABLE wrap(ORIG originalObj);
+    TypedParcelable<ORIG> wrap(ORIG originalObj);
   }
 
   private static Map<Class, Delegator> getFieldValue(Class clazz, String fieldName)
